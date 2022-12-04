@@ -6,12 +6,12 @@ from .models import (
 
 
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'measurement_unit')
+    list_display = ('id','name', 'measurement_unit')
     list_filter = ('name',)
 
 
 class TagAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug',)
+    list_display = ('id', 'name', 'slug',)
     search_fields = ('name',)
 
 
@@ -29,7 +29,7 @@ class IngredientRecipeAdmin(admin.ModelAdmin):
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'author',)
+    list_display = ('id','name', 'author',)
     search_fields = ('name', 'description',)
     list_filter = ('name', 'author', 'tags',)
     empty_value_display = '-не указано-'

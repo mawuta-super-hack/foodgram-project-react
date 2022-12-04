@@ -1,12 +1,14 @@
 from rest_framework import viewsets
-from foods.models import Tag, Recipe, Ingredient, Favorite, ShoppingCart
+from foods.models import Tag, Recipe, Ingredient, Favorite, ShoppingCart, IngredientRecipe
 from users.models import User, Follow
-from .serializers import UserFollowSerializer, TagSerializer, IngredientSerializer, RecipeSerializer, UserSerializer, UserPasswordSerializer
-from rest_framework import mixins, status 
+from .serializers import IngredientRecipeSerializer, RecipePostSerializer, RecipeFORSerializer, ShoppingCartSerializer, UserFollowSerializer, TagSerializer, IngredientSerializer, RecipeSerializer, UserSerializer, UserPasswordSerializer
+from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-
+from django.http import HttpResponse
+from rest_framework.permissions import IsAuthenticated
+from django.db.models import Count, Subquery, Sum 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
     """Вьюсет для модели Tag"""
@@ -24,10 +26,110 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipesViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Recipes"""
-
+    
+    ACTIONS = ['create', 'partial_update']
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all()
     
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save(author=self.request.user)
+
+    @action(
+        methods=['post', 'delete'],
+        detail=False, url_path=r'(?P<recipe_id>\d+)/favorite',
+        #permission_classes=[IsAuthenticated],
+        serializer_class=RecipeFORSerializer,
+    )
+    def favorite(self, request, recipe_id):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        if request.method == 'POST':
+            context = {'request': request,
+                        'recipe_id': recipe.id,
+                        'user_id': user.id,
+                        'def': 'favorite'}
+            serializer = RecipeFORSerializer(data=request.data, context=context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        favorite = get_object_or_404(Favorite, recipe=recipe.id, user=user.id)
+        favorite.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(
+        methods=['post', 'delete'],
+        detail=False, url_path=r'(?P<recipe_id>\d+)/shopping_cart',
+        #permission_classes=[IsAuthenticated],
+        serializer_class=ShoppingCartSerializer,
+    )
+    def shopping(self, request, recipe_id):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        if request.method == 'POST':
+            context = {'request': request,
+                        'recipe_id': recipe.id,
+                        'user_id': user.id,
+                        'def': 'shopping'}
+            serializer = RecipeFORSerializer(data=request.data, context=context)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        favorite = get_object_or_404(ShoppingCart, recipe=recipe.id, user=user.id)
+        favorite.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(
+        methods=['get'],
+        detail=False, url_path='download_shopping_cart',
+        #permission_classes=[IsAuthenticated],
+        #serializer_class=ShoppingCartSerializer,
+    )
+    def download(self, request):
+        
+        #FilePointer = open(file_path,"r")
+        queryset = ShoppingCart.objects.filter(user_id=request.user.id).values_list('recipe_id')
+        print(queryset)
+        result = IngredientRecipe.objects.filter(
+            recipe_id__in=queryset).values_list('ingredient__name', 'ingredient__measurement_unit')
+        for_file = result.annotate(Sum('amount'))
+        print(for_file)
+        
+        #serializer = IngredientRecipeSerializer(qs, many=True)open(for_file.file.path,"r"),
+        response = HttpResponse(content_type='text/plain')#'"application/txt"; charset=UTF-8')
+        response['Content-Disposition'] = 'attachment; filename=Shopep.txt'#            "  %s"' % filename)'attachment; filename={0}'.format(filename))
+        response.write('список покупок ')
+        response.write(list(for_file))
+        return response
+    
+        #file_path = file_url
+        #FilePointer = open(file_path,"r")
+        #response = HttpResponse(FilePointer,content_type='application/msword')
+        #response['Content-Disposition'] = 'attachment; filename=NameOfFile'
+
+        #return response.
+
+
+    #def download(self, *args, **kwargs):
+        #instance = self.get_object()
+
+        # get an open file handle (I'm just using a file attached to the model for this example):
+        #file_handle = instance.file.open()
+
+        # send file
+        #response = FileResponse(file_handle, content_type='"application/pdf"; charset=UTF-8'')
+        #response['Content-Length'] = instance.file.size
+        #response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+
+        #return response
+
+    def get_serializer_class(self):
+        if self.action in self.ACTIONS:
+            return RecipePostSerializer
+        return RecipeSerializer
+
     #ACTIONS = ['create', 'partial_update']
     #serializer_class = TitlePostSerializer
     #queryset = Title.objects.all().annotate(rating=Avg('reviews__score'))
@@ -35,10 +137,12 @@ class RecipesViewSet(viewsets.ModelViewSet):
     #permission_classes = [IsAdminOrReadOnly]
     #ordering_field = ('name',)
 
+
 class CreateListRetrieveViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin,
                    mixins.ListModelMixin, viewsets.GenericViewSet):
     pass
-    
+
+
 class UsersViewSet(CreateListRetrieveViewSet):
     """Вьюсет для модели Users"""
 
@@ -81,19 +185,22 @@ class UsersViewSet(CreateListRetrieveViewSet):
         self.request.user.save()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
     @action(
         methods=['get'],
         detail=False, url_path='subscriptions',
-        #permission_classes=[IsAuthenticated],
-        #serializer_class=UserSerializer,
+        permission_classes=[IsAuthenticated],
+        serializer_class=UserFollowSerializer
     )
     def get_followers(self, request):
-        follow = Follow.objects.filter(user_id=self.request.user.id)
-        following = User.objects.prefetch_related('follower').filter(
-            following__in=follow.values('author_id'))
-        serializer = UserSerializer(following, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
+        if request.user:
+            follow_set = Follow.objects.filter(
+                user_id=request.user.id).values_list('author')
+            follow = User.objects.filter(
+                id__in=[follow_set])
+            serializer = UserFollowSerializer(follow, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
     @action(
         methods=['post', 'delete'],
         detail=False, url_path=r'(?P<author_id>\d+)/subscribe',
@@ -104,13 +211,16 @@ class UsersViewSet(CreateListRetrieveViewSet):
         user = request.user
         author = get_object_or_404(User, id=author_id)
         if request.method == 'POST':
-            context = {'request': request}
-            data = {'author': author.id,
-                    'user': user.id}
-            serializer = UserFollowSerializer(data=data) #, context=context)
+            context = {
+                'request': request,
+                'author_id': author.id,
+                'user_id': user.id
+            }
+            serializer = UserFollowSerializer(
+                data=request.data, context=context)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        following = Follow.objects.get(author=author.id, user=user.id)
+        following = get_object_or_404(Follow, author=author.id, user=user.id)
         following.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
