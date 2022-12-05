@@ -1,15 +1,16 @@
 from django.db import models
-from users.models import User
+from users.models import User, Follow
+from django.db.models import OuterRef, Exists, Count
 
 
 class Tag(models.Model):
     '''Модель для описания тегов'''
     name = models.CharField(
-        verbose_name='Название', max_length=200, unique=True)
+        verbose_name='Название', max_length=200)
     color = models.CharField(
-        verbose_name='Цвет', max_length=7, unique=True)
+        verbose_name='Цвет', max_length=7)
     slug = models.SlugField(
-        verbose_name='Ссылка', max_length=100, unique=True)
+        verbose_name='Ссылка', max_length=200, unique=True)
 
     class Meta:
         ordering = ('name',)
@@ -22,7 +23,7 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     name = models.CharField(
-        verbose_name='Название', max_length=200, unique=True)
+        verbose_name='Название', max_length=200)
     measurement_unit = models.CharField(
         verbose_name='Единица измерения', max_length=200)
 
@@ -33,6 +34,42 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class RecipeQuerySet(models.QuerySet):
+    def add_anotations_recipe(self, user_id):
+        return Recipe.objects.annotate(
+            is_favorited=Exists(
+                Favorite.objects.filter(
+                    user_id=user_id, recipe__id=OuterRef('id')
+                ))
+            ).annotate(
+            is_in_shopping_cart=Exists(
+                ShoppingCart.objects.filter(
+                    user_id=user_id, recipe__id=OuterRef('id'))))
+
+
+
+
+#class RecipeManager(models.Manager):
+#    def get_queryset(self):
+#        return AnnotateQuerySet(self.model, using=self._db)
+
+
+#class UserManager(models.Manager):
+#    def get_queryset(self):
+#        return UserQuerySet(self.model, using=self._db)
+
+#class UserManager(models.Manager):
+#    def annotated(self, user_id):
+        
+#        return  User.objects.all(
+#            ).annotate(
+#            is_subscribed=Exists(
+#                Follow.objects.filter(
+#                    user_id=user_id, author__id=OuterRef('id'))))#UserQuerySet(self.model, using=self._db)
+
+
 
 
 class Recipe(models.Model):
@@ -60,6 +97,7 @@ class Recipe(models.Model):
     def __str__(self):
         return self.name
 
+    objects = RecipeQuerySet.as_manager()
 
 class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(

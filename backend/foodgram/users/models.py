@@ -1,5 +1,16 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import OuterRef, Exists, Count
+
+
+class UserQuerySet(models.QuerySet):
+    def add_anotations_user(self, user_id):
+        return User.objects.all(
+            ).annotate(
+            is_subscribed=Exists(
+                Follow.objects.filter(
+                    user_id=user_id, author__id=OuterRef('id')))
+                    ).annotate(recipes_limit=Count('recipe'))
 
 
 class User(AbstractUser):
@@ -17,13 +28,13 @@ class User(AbstractUser):
         'Никнэйм', max_length=150, unique=True
     )
     first_name = models.CharField(
-        'Имя', max_length=150, unique=True
+        'Имя', max_length=150,
     )
     last_name = models.CharField(
-        'Фамилия', max_length=150, unique=True
+        'Фамилия', max_length=150
     )
     password = models.CharField(
-        'Пароль', max_length=150, unique=True
+        'Пароль', max_length=150
     )
 
     # role = models.CharField(
@@ -32,9 +43,9 @@ class User(AbstractUser):
     #    choices=ROLES, default=USER
     # )
 
-    @property
-    def is_admin(self):
-        return self.role == self.ADMIN or self.is_superuser or self.is_staff
+    # @property
+    # def is_admin(self):
+    #    return self.role == self.ADMIN or self.is_superuser or self.is_staff
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
@@ -47,6 +58,7 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    objects = UserQuerySet.as_manager()
 
 class Follow(models.Model):
     user = models.ForeignKey(
@@ -59,7 +71,7 @@ class Follow(models.Model):
         on_delete=models.CASCADE,
         related_name='following',
         verbose_name='Автор')
-    
+
     class Meta:
         verbose_name_plural = "Подписки"
         constraints = (models.UniqueConstraint(
