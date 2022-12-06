@@ -1,10 +1,11 @@
 from django.db import models
-from users.models import User, Follow
-from django.db.models import OuterRef, Exists, Count
+from users.models import User
+from django.db.models import OuterRef, Exists
 
 
 class Tag(models.Model):
-    '''Модель для описания тегов'''
+    """Модель для описания тегов."""
+
     name = models.CharField(
         verbose_name='Название', max_length=200)
     color = models.CharField(
@@ -22,6 +23,8 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
+    """Модель для описания ингредиентов."""
+
     name = models.CharField(
         verbose_name='Название', max_length=200)
     measurement_unit = models.CharField(
@@ -37,6 +40,8 @@ class Ingredient(models.Model):
 
 
 class RecipeQuerySet(models.QuerySet):
+    """Аннотация дополнительных полей для рецептов."""
+
     def add_anotations_recipe(self, user_id):
         return Recipe.objects.annotate(
             is_favorited=Exists(
@@ -49,31 +54,9 @@ class RecipeQuerySet(models.QuerySet):
                     user_id=user_id, recipe__id=OuterRef('id'))))
 
 
-
-
-#class RecipeManager(models.Manager):
-#    def get_queryset(self):
-#        return AnnotateQuerySet(self.model, using=self._db)
-
-
-#class UserManager(models.Manager):
-#    def get_queryset(self):
-#        return UserQuerySet(self.model, using=self._db)
-
-#class UserManager(models.Manager):
-#    def annotated(self, user_id):
-        
-#        return  User.objects.all(
-#            ).annotate(
-#            is_subscribed=Exists(
-#                Follow.objects.filter(
-#                    user_id=user_id, author__id=OuterRef('id'))))#UserQuerySet(self.model, using=self._db)
-
-
-
-
 class Recipe(models.Model):
-    '''Модель для описания рецептов'''
+    """Модель для описания рецептов."""
+
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name='Автор')
     name = models.CharField(verbose_name='Название', max_length=200)
@@ -88,9 +71,10 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(Tag, through='TagRecipe')
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления', default=1)
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     class Meta:
-        ordering = ('name',)
+        ordering = ('-pub_date',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -99,7 +83,10 @@ class Recipe(models.Model):
 
     objects = RecipeQuerySet.as_manager()
 
+
 class IngredientRecipe(models.Model):
+    """Связующая модель: рецепты и ингредиенты."""
+
     ingredient = models.ForeignKey(
         Ingredient, on_delete=models.CASCADE, verbose_name='Ингредиент')
     recipe = models.ForeignKey(
@@ -116,6 +103,8 @@ class IngredientRecipe(models.Model):
 
 
 class TagRecipe(models.Model):
+    """Связующая модель: рецепты и теги."""
+
     tag = models.ForeignKey(
         Tag, on_delete=models.CASCADE, verbose_name='Тег')
     recipe = models.ForeignKey(
@@ -130,6 +119,8 @@ class TagRecipe(models.Model):
 
 
 class Favorite(models.Model):
+    """Вспомогательная модель: добавление рецепта в избранное."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -148,6 +139,8 @@ class Favorite(models.Model):
 
 
 class ShoppingCart(models.Model):
+    """Вспомогательная модель: добавление рецепта в корзину."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

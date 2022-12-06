@@ -2,8 +2,12 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models import OuterRef, Exists, Count
 
+from django.contrib.auth.models import UserManager
 
-class UserQuerySet(models.QuerySet):
+
+class UserManagerAddFields(UserManager):
+    """Аннотация дополнительных полей для пользователей."""
+
     def add_anotations_user(self, user_id):
         return User.objects.all(
             ).annotate(
@@ -14,6 +18,8 @@ class UserQuerySet(models.QuerySet):
 
 
 class User(AbstractUser):
+    """Модель для описания пользователей."""
+
     ADMIN = 'admin'
     USER = 'user'
 
@@ -37,16 +43,6 @@ class User(AbstractUser):
         'Пароль', max_length=150
     )
 
-    # role = models.CharField(
-    #    'Роль',
-    #    max_length=max([len(role) for role, name in ROLES]),
-    #    choices=ROLES, default=USER
-    # )
-
-    # @property
-    # def is_admin(self):
-    #    return self.role == self.ADMIN or self.is_superuser or self.is_staff
-
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
@@ -58,9 +54,12 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
-    objects = UserQuerySet.as_manager()
+    objects = UserManagerAddFields()
+
 
 class Follow(models.Model):
+    """Вспомогательная модель: подписка на автора."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
