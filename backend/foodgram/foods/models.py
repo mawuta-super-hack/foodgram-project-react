@@ -54,7 +54,7 @@ class RecipeQuerySet(models.QuerySet):
                 Favorite.objects.filter(
                     user_id=user_id, recipe__id=OuterRef('id')
                 ))
-            ).annotate(
+        ).annotate(
             is_in_shopping_cart=Exists(
                 ShoppingCart.objects.filter(
                     user_id=user_id, recipe__id=OuterRef('id'))))
@@ -74,7 +74,7 @@ class Recipe(models.Model):
     text = models.TextField(verbose_name='Описание')
     ingredients = models.ManyToManyField(
         Ingredient, through='IngredientRecipe')
-    tags = models.ManyToManyField(Tag, through='TagRecipe')
+    tags = models.ManyToManyField(Tag)
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления', default=1)
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
@@ -106,22 +106,6 @@ class IngredientRecipe(models.Model):
     class Meta:
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецепте'
-
-
-class TagRecipe(models.Model):
-    """Связующая модель: рецепты и теги."""
-
-    tag = models.ForeignKey(
-        Tag, on_delete=models.CASCADE, verbose_name='Тег')
-    recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, verbose_name='Рецепт')
-
-    def __str__(self):
-        return f'{self.tag} {self.recipe}'
-
-    class Meta:
-        verbose_name = 'Тег'
-        verbose_name_plural = 'Теги'
 
 
 class Favorite(models.Model):

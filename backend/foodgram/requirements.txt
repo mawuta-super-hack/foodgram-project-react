@@ -13,7 +13,6 @@ sqlparse==0.3.1
 Pillow==9.3.0
 sorl-thumbnail==12.7.0
 flake8==3.9.2
-flake8-docstrings==1.6.0
 webcolors==1.12
 djoser==2.1.0
 django-extra-fields==3.0.2

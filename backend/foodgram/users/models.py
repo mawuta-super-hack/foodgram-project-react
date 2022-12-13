@@ -8,11 +8,11 @@ class UserManagerAddFields(UserManager):
 
     def add_anotations_user(self, user_id):
         return User.objects.all(
-            ).annotate(
+        ).annotate(
             is_subscribed=Exists(
                 Follow.objects.filter(
                     user_id=user_id, author__id=OuterRef('id')))
-                    ).annotate(recipes_limit=Count('recipe'))
+        ).annotate(recipes_limit=Count('recipe'))
 
 
 class User(AbstractUser):

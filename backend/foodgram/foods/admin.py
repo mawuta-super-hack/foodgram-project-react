@@ -41,7 +41,7 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('name', 'description',)
     list_filter = ('name', 'author', 'tags',)
     empty_value_display = '-не указано-'
-    inlines = (TagRecipeline, IngredientRecipeline)
+    inlines = (IngredientRecipeline,)
     readonly_fields = ('add_favorite',)
 
 

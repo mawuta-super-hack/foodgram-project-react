@@ -18,31 +18,41 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='recipe',
             name='author',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='Автор'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to=settings.AUTH_USER_MODEL, verbose_name='Автор'),
         ),
         migrations.AddField(
             model_name='recipe',
             name='ingredients',
-            field=models.ManyToManyField(through='foods.IngredientRecipe', to='foods.Ingredient'),
+            field=models.ManyToManyField(
+                through='foods.IngredientRecipe', to='foods.Ingredient'),
         ),
         migrations.AddField(
             model_name='recipe',
             name='tags',
-            field=models.ManyToManyField(through='foods.TagRecipe', to='foods.Tag'),
+            field=models.ManyToManyField(to='foods.Tag'),
         ),
         migrations.AddField(
             model_name='ingredientrecipeamount',
             name='id_ingredient_recipe',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='foods.IngredientRecipe', verbose_name='Ингредиент в рецепте'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to='foods.IngredientRecipe',
+                verbose_name='Ингредиент в рецепте'),
         ),
         migrations.AddField(
             model_name='ingredientrecipe',
             name='ingredient',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='foods.Ingredient', verbose_name='Ингредиент'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to='foods.Ingredient', verbose_name='Ингредиент'),
         ),
         migrations.AddField(
             model_name='ingredientrecipe',
             name='recipe',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='foods.Recipe', verbose_name='Рецепт'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to='foods.Recipe', verbose_name='Рецепт'),
         ),
     ]

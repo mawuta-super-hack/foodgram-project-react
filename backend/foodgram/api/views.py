@@ -9,7 +9,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import Follow, User
 
-# from .filters import RecipeFilter
 from .paginators import PageNumberPaginationWithLimit
 from .permissions import IsAdminAuthorOrReadOnly
 from .serializers import (IngredientSerializer, RecipeFORSerializer,
@@ -40,7 +39,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminAuthorOrReadOnly,)
     pagination_class = PageNumberPaginationWithLimit
     http_method_names = ('get', 'post', 'patch', 'delete')
-    # filterset_class = (RecipeFilter)
     ordering_field = ('-pub_date',)
 
     def get_queryset(self):
@@ -56,7 +54,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
         elif self.request.query_params.get('tags'):
             tags = [self.request.query_params.get('tags')]
             queryset = queryset.filter(tags__slug__in=tags).distinct()
-
         return queryset
 
     def perform_create(self, serializer):
@@ -64,11 +61,6 @@ class RecipesViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(author=self.request.user)
-
-    #def get_permissions(self):
-    #    if self.action == 'list' or self.action == 'retrieve':
-    #        return ((AllowAny(),))
-    #    return super().get_permissions()
 
     @action(
         methods=('post', 'delete'),
@@ -111,7 +103,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         favorite = get_object_or_404(
-           ShoppingCart, recipe=recipe.id, user=user.id)
+            ShoppingCart, recipe=recipe.id, user=user.id)
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
