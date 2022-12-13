@@ -1,10 +1,11 @@
-from django.db import migrations
 from csv import DictReader, reader
+
+from django.db import migrations
 
 
 def add_ingredients(apps, schema_editor):
     file = (
-        'D:/Dev/foodgram-project-react/backend/foodgram/foods/ingredients.csv'
+        '/app/foods/ingredients.csv'
     )
     Ingredient = apps.get_model('foods', 'Ingredient')
     for row in reader(open(file, encoding='utf-8')):
@@ -16,7 +17,7 @@ def add_ingredients(apps, schema_editor):
 
 def remove_ingredients(apps, schema_editor):
     file = (
-        'D:/Dev/foodgram-project-react/backend/foodgram/foods/ingredients.csv'
+        '/app/foods/ingredients.csv'
     )
     Ingredient = apps.get_model('foods', 'Ingredient')
     for row in DictReader(open(file, encoding='utf-8')):

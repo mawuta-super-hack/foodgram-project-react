@@ -1,13 +1,12 @@
-from rest_framework import serializers
-from foods.models import (
-    Tag, Ingredient, Recipe, Favorite,
-    ShoppingCart, IngredientRecipe, TagRecipe
-    )
-from users.models import User, Follow
-from drf_extra_fields.fields import Base64ImageField
 import re
+
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from drf_extra_fields.fields import Base64ImageField
+from foods.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                          ShoppingCart, Tag, TagRecipe)
+from rest_framework import serializers
+from users.models import Follow, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -182,20 +181,18 @@ class RecipePostSerializer(serializers.ModelSerializer):
             TagRecipe.objects.bulk_create(tags)
         return recipe
 
-    @transaction.atomic
     def update(self, instance, validated_data):
+        validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+
         Recipe.objects.filter(
-            id=instance.id).update(
-                name=validated_data['name'],
-                image=validated_data['image'],
-                text=validated_data['text'],
-                cooking_time=validated_data['cooking_time'])
+            id=instance.id).update(**validated_data)
+        
         recipe = Recipe.objects.add_anotations_recipe(
             self.context['request'].user.id).get(id=instance.id)
-
+        
         ingredients = self.initial_data.pop('ingredients', None)
-        tags = self.validated_data.pop('tags', None)
-
+        
         if tags is not None:
             TagRecipe.objects.filter(recipe=recipe).delete()
             for tg in tags:
@@ -213,6 +210,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
                         amount=ing['amount'])
                 ]
                 IngredientRecipe.objects.bulk_create(ing_rec)
+        recipe.save()
         return recipe
 
     def to_representation(self, value):
@@ -237,6 +235,7 @@ class RecipeFORSerializer(serializers.ModelSerializer):
             'id',  'name', 'image', 'cooking_time'
         )
 
+    @transaction.atomic
     def create(self, validated_data):
         if self.context.get('def') == 'favorite':
             Favorite.objects.create(
@@ -281,13 +280,10 @@ class UserFollowSerializer(serializers.ModelSerializer):
                 id=self.context.get('author_id'))
 
     def validate(self, data):
-        if self.context['request'].method == 'POST':
-            obj = Follow.objects.filter(
+        if self.context['request'].method == 'POST' and Follow.objects.filter(
                 user_id=self.context['request'].user.id,
-                author_id=self.context.get('author_id')).exists()
-            if obj is True:
-                raise serializers.ValidationError(
-                    'Вы уже подписаны!')
+                author_id=self.context.get('author_id')).exists():
+            raise serializers.ValidationError('Вы уже подписаны!')
 
         if self.context['request'].user.id == self.context.get('author_id'):
             raise serializers.ValidationError(

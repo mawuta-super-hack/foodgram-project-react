@@ -1,6 +1,5 @@
 import django_filters
 from foods.models import Recipe
-from users.models import User
 
 
 class RecipeFilter(django_filters.FilterSet):

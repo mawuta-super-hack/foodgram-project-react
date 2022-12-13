@@ -1,6 +1,8 @@
+from colorfield.fields import ColorField
 from django.db import models
+from django.db.models import Exists, OuterRef
+from django.utils.text import slugify
 from users.models import User
-from django.db.models import OuterRef, Exists
 
 
 class Tag(models.Model):
@@ -8,10 +10,10 @@ class Tag(models.Model):
 
     name = models.CharField(
         verbose_name='Название', max_length=200)
-    color = models.CharField(
-        verbose_name='Цвет', max_length=7)
+    color = ColorField(
+        verbose_name='Цвет', default='#006eff')
     slug = models.SlugField(
-        verbose_name='Ссылка', max_length=200, unique=True)
+        verbose_name='Ссылка', max_length=200, unique=True, null=False)
 
     class Meta:
         ordering = ('name',)
@@ -20,6 +22,10 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.slug)
+        return super().save(*args, **kwargs)
 
 
 class Ingredient(models.Model):
@@ -135,7 +141,7 @@ class Favorite(models.Model):
     class Meta:
         verbose_name_plural = "Избранные рецепты"
         constraints = (models.UniqueConstraint(
-            fields=['user', 'recipe'], name='unique_combination'),)
+            fields=['user', 'recipe'], name='unique_recipe_favorite'),)
 
 
 class ShoppingCart(models.Model):
@@ -155,4 +161,4 @@ class ShoppingCart(models.Model):
     class Meta:
         verbose_name_plural = "Список покупок"
         constraints = (models.UniqueConstraint(
-            fields=['user', 'recipe'], name='unique_combination'),)
+            fields=['user', 'recipe'], name='unique_recipe_in_cart'),)

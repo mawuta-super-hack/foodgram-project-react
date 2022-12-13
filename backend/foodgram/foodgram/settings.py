@@ -2,14 +2,11 @@ import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = 'y3p(se2iojb$!!_c*8q#t#^26s2@v_ze0)pxoqme0yyck*$o@&'
+SECRET_KEY = os.getenv('SECRET_KEY', default='secret_key')
 
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-]
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -22,6 +19,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'djoser',
     'django_filters',
+    'colorfield',
     'api.apps.ApiConfig',
     'users.apps.UsersConfig',
     'foods.apps.FoodsConfig',
@@ -57,13 +55,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
+#        'NAME': os.getenv('DB_NAME', default='postgres'),
+#        'USER': os.getenv('POSTGRES_USER', default='postgres'),
+#        'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='postgres'),
+#        'HOST': os.getenv('DB_HOST', default='db'),
+#        'PORT': os.getenv('DB_PORT', default='5432')
+#    }
+#}
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -95,7 +102,7 @@ STATIC_URL = '/static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-MEDIA_ROOT = '/media/'
+MEDIA_URL = '/media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 

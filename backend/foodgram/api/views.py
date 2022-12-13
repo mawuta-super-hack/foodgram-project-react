@@ -1,22 +1,21 @@
-from rest_framework import viewsets
-from foods.models import (
-    Tag, Recipe, Ingredient, Favorite, ShoppingCart,
-    IngredientRecipe,)
-from users.models import User, Follow
-from .serializers import (
-    RecipePostSerializer, RecipeFORSerializer, UserFollowSerializer,
-    TagSerializer, IngredientSerializer, RecipeSerializer,
-    UserSerializer, UserPasswordSerializer)
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponse
-from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.db.models import Sum
-from .permissions import IsAdminAuthorOrReadOnly
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from foods.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                          ShoppingCart, Tag)
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from users.models import Follow, User
+
+# from .filters import RecipeFilter
 from .paginators import PageNumberPaginationWithLimit
-from .filters import RecipeFilter
+from .permissions import IsAdminAuthorOrReadOnly
+from .serializers import (IngredientSerializer, RecipeFORSerializer,
+                          RecipePostSerializer, RecipeSerializer,
+                          TagSerializer, UserFollowSerializer,
+                          UserPasswordSerializer, UserSerializer)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
@@ -38,14 +37,27 @@ class RecipesViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Recipes: чтение и запись."""
 
     serializer_class = RecipeSerializer
-    permission_classes = [IsAdminAuthorOrReadOnly]
+    permission_classes = (IsAdminAuthorOrReadOnly,)
     pagination_class = PageNumberPaginationWithLimit
-    http_method_names = ['get', 'post', 'patch', 'delete']
-    filterset_class = (RecipeFilter)
+    http_method_names = ('get', 'post', 'patch', 'delete')
+    # filterset_class = (RecipeFilter)
     ordering_field = ('-pub_date',)
 
     def get_queryset(self):
-        return Recipe.objects.add_anotations_recipe(self.request.user.id)
+        queryset = Recipe.objects.add_anotations_recipe(self.request.user.id)
+
+        if self.request.query_params.get('is_favorited'):
+            queryset = queryset.filter(is_favorited=True)
+        elif self.request.query_params.get('is_in_shopping_cart'):
+            queryset = queryset.filter(is_in_shopping_cart=True)
+        elif self.request.query_params.get('author'):
+            queryset = queryset.filter(
+                author_id=self.request.query_params.get('author'))
+        elif self.request.query_params.get('tags'):
+            tags = [self.request.query_params.get('tags')]
+            queryset = queryset.filter(tags__slug__in=tags).distinct()
+
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -53,8 +65,13 @@ class RecipesViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         serializer.save(author=self.request.user)
 
+    #def get_permissions(self):
+    #    if self.action == 'list' or self.action == 'retrieve':
+    #        return ((AllowAny(),))
+    #    return super().get_permissions()
+
     @action(
-        methods=['post', 'delete'],
+        methods=('post', 'delete'),
         detail=False, url_path=r'(?P<recipe_id>\d+)/favorite',
         permission_classes=[IsAuthenticated],
         serializer_class=RecipeFORSerializer,
@@ -77,7 +94,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-        methods=['post', 'delete'],
+        methods=('post', 'delete'),
         detail=False, url_path=r'(?P<recipe_id>\d+)/shopping_cart',
         permission_classes=[IsAuthenticated])
     def shopping(self, request, recipe_id):
@@ -99,7 +116,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-        methods=['get'],
+        methods=('get',),
         detail=False, url_path='download_shopping_cart',
         permission_classes=[IsAuthenticated])
     def download(self, request):
@@ -120,7 +137,7 @@ class RecipesViewSet(viewsets.ModelViewSet):
         return response
 
     def get_serializer_class(self):
-        if self.action in ['create', 'partial_update']:
+        if self.action in ('create', 'partial_update'):
             return RecipePostSerializer
         return RecipeSerializer
 
@@ -129,7 +146,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     """Вьюсет для модели Users: чтение и запись."""
 
     serializer_class = UserSerializer
-    http_method_names = ['post', 'get', 'delete']
+    http_method_names = ('post', 'get', 'delete')
     permission_classes = [IsAuthenticated]
     pagination_class = PageNumberPaginationWithLimit
 
@@ -142,7 +159,7 @@ class UsersViewSet(viewsets.ModelViewSet):
         return User.objects.add_anotations_user(self.request.user.id)
 
     @action(
-        methods=['get'],
+        methods=('get',),
         detail=False, url_path='me',
         serializer_class=UserSerializer,
     )
@@ -154,7 +171,7 @@ class UsersViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(
-        methods=['post'],
+        methods=('post',),
         url_path='set_password',
         detail=False,
         serializer_class=UserPasswordSerializer,
@@ -169,24 +186,26 @@ class UsersViewSet(viewsets.ModelViewSet):
         )
 
     @action(
-        methods=['get'],
+        methods=('get',),
         detail=False, url_path='subscriptions',
         serializer_class=UserFollowSerializer)
     def get_followers(self, request):
+        paginator = PageNumberPaginationWithLimit()
         follow_set = Follow.objects.filter(
             user_id=request.user.id).values_list('author')
         follow = User.objects.add_anotations_user(self.request.user.id).filter(
             id__in=[follow_set])
         if self.request.query_params.get('recipes_limit'):
             limit = self.request.query_params.get('recipes_limit')
-            follow = follow.filter(recipes_limit=limit)
-        serializer = UserFollowSerializer(follow, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            follow = follow.filter(recipes_limit__lte=limit)
+        context = paginator.paginate_queryset(follow, request)
+        serializer = UserFollowSerializer(context, many=True)
+        result = paginator.get_paginated_response(serializer.data)
+        return result
 
     @action(
-        methods=['post', 'delete'],
+        methods=('post', 'delete'),
         detail=False, url_path=r'(?P<author_id>\d+)/subscribe',
-        # permission_classes=[IsAuthenticated],
         serializer_class=UserFollowSerializer,
     )
     def follow(self, request, author_id):

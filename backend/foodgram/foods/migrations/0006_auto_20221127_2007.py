@@ -10,12 +10,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveConstraint(
-            model_name='shoppingcart',
-            name='unique_combination',
-        ),
-        migrations.AddConstraint(
-            model_name='shoppingcart',
-            constraint=models.UniqueConstraint(fields=('user', 'recipe'), name='unique_combination'),
-        ),
-    ]
+       ]

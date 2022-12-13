@@ -1,8 +1,6 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
-from django.db.models import OuterRef, Exists, Count
-
-from django.contrib.auth.models import UserManager
+from django.db.models import Count, Exists, OuterRef
 
 
 class UserManagerAddFields(UserManager):
@@ -74,4 +72,4 @@ class Follow(models.Model):
     class Meta:
         verbose_name_plural = "Подписки"
         constraints = (models.UniqueConstraint(
-            fields=['user', 'author'], name='unique_combination'),)
+            fields=['user', 'author'], name='unique__follow'),)
