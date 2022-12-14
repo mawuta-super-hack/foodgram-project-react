@@ -6,11 +6,11 @@ from django.db import migrations
 def add_ingredients(apps, schema_editor):
     file = (
         '/app/foods/ingredients.csv'
-        )
-    Ingredient = apps.get_model('foods', 'Ingredient')
+    )
+    ingredient = apps.get_model('foods', 'Ingredient')
     for row in reader(open(file, encoding='utf-8')):
         print(row)
-        data = Ingredient(name=row[0],
+        data = ingredient(name=row[0],
                           measurement_unit=row[1])
         data.save()
 
@@ -19,9 +19,9 @@ def remove_ingredients(apps, schema_editor):
     file = (
         '/app/foods/ingredients.csv'
     )
-    Ingredient = apps.get_model('foods', 'Ingredient')
+    ingredient = apps.get_model('foods', 'Ingredient')
     for row in DictReader(open(file, encoding='utf-8')):
-        Ingredient.odjects.get(name=row[0]).delete()
+        ingredient.odjects.get(name=row[0]).delete()
 
 
 class Migration(migrations.Migration):
