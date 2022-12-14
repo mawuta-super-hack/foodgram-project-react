@@ -5,7 +5,7 @@
 
 <br>
 
-![workflow](https://github.com/mawuta-super-hack/yamdb_final/actions/workflows/yamdb_workflow.yml/badge.svg?)
+![workflow](https://github.com/mawuta-super-hack/foodgram-poject-react/actions/workflows/yamdb_workflow.yml/badge.svg?)
 
 ### Возможности API:
 - Регистрация и выыдача токена авторизации.
@@ -15,21 +15,52 @@
 - Подписка на любимых авторов.
 
 
+### Описание команд для запуска приложения в контейнерах:
+
 Клонировать репозиторий и перейти в него в командной строке:
 
 ```
-git clone https://github.com/mawuta-super-hack/foodgram-project-react.git
+git clone https://github.com/mawuta-super-hack/foodgram-poject-react.git
+```
+
+```
+cd ./foodgram-poject-react/infra
+```
+
+Запуск docker-compose:
+```
+docker-compose up -d --build
 ```
 
 Выполение миграций:
 ```
-python manage.py migrate
+docker-compose exec backend python manage.py migrate
 ```
 
 Создание суперпользователя:
 ```
-python manage.py createsuperuser
+docker-compose exec backend python manage.py createsuperuser
 ```
+
+Cбор статики:
+```
+docker-compose exec backend python manage.py collectstatic --no-input 
+```
+
+Создание резервной копии БД:
+```
+docker-compose exec backend python manage.py dumpdata > fixtures.json
+```
+
+### Пример наполения .env-файла:
+
+DB_ENGINE=django.db.backends.postgresql <br>
+DB_NAME=(им базы данных)<br>
+POSTGRES_USER=(логин для подключения к БД)<br>
+POSTGRES_PASSWORD=(пароль для подключения к БД)<br>
+DB_HOST=(название сервиса/контейнера)<br>
+DB_PORT=(порт для подключения к БД)<br>
+SECRET_KEY=(автоматически сгенерированное значение переменной при создании проекта django)<br>
 
 ### Импорт данных из csv для наполнения базы:
 
@@ -80,14 +111,24 @@ POST http://127.0.0.1:8000/api/recipes/128
 DELETE http://127.0.0.1:8000/api/recipes/128
 
 
-Полный список запросов и эндпоинтов описан в документации ReDoc.
 
+Полный список запросов и эндпоинтов описан в документации ReDoc.
+Документация доступна после запуска проекта по [адресу](http://51.250.26.79/docs).
+
+<br>
+Проект доступен по [адресу](http://51.250.26.79/recipes).
+<br>
 
 Автор проекта:
 <br>
 Клименкова Мария [Github](https://github.com/mawuta-super-hack)<br>
 
+<br>
 Данные администратора:
+
+<br>
 email: maria@mail.ru
+
+<br>
 password: maria
 
