@@ -5,7 +5,7 @@
 
 <br>
 
-![workflow](https://github.com/mawuta-super-hack/foodgram-poject-react/actions/workflows/yamdb_workflow.yml/badge.svg?)
+![workflow](https://github.com/mawuta-super-hack/foodgram-poject-react/actions/workflows/foodgram_workflow.yml/badge.svg?)
 
 ### Возможности API:
 - Регистрация и выыдача токена авторизации.
@@ -113,7 +113,7 @@ DELETE http://127.0.0.1:8000/api/recipes/128
 
 
 Полный список запросов и эндпоинтов описан в документации ReDoc.
-Документация доступна после запуска проекта по [адресу](http://51.250.26.79/docs).
+Документация доступна после запуска проекта по [адресу](http://51.250.26.79/api/docs).
 
 <br>
 Проект доступен по [адресу](http://51.250.26.79/recipes).
