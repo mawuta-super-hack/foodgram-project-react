@@ -8,11 +8,11 @@ services:
       - ./.env
 
   backend:
-    build:
-      context: ../backend/foodgram
-      dockerfile: Dockerfile
+    #build:
+    #  context: ../backend/foodgram
+    #  dockerfile: Dockerfile
     
-    # image: superprog/foodgram_backend:latest 
+    image: superprog/foodgram_backend:latest 
     restart: always
     volumes:
       - static_value:/app/static/
@@ -24,10 +24,10 @@ services:
     container_name: backend
 
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-    # image: superprog/foodgram_frontend:latest
+    #build:
+    #  context: ../frontend
+    #  dockerfile: Dockerfile
+    image: superprog/foodgram_frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
