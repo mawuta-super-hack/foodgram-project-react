@@ -214,7 +214,9 @@ class RecipeFORSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'image', 'cooking_time'
         )
-        read_only_fields = ('__all__',)
+        read_only_fields = (
+            'id', 'name', 'image', 'cooking_time'
+        )
 
     @transaction.atomic
     def create(self, validated_data):
@@ -243,7 +245,10 @@ class UserFollowSerializer(serializers.ModelSerializer):
             'email', 'id', 'username', 'first_name', 'last_name',
             'is_subscribed', 'recipes', 'recipes_count'
         )
-        read_only_fields = ('__all__',)
+        read_only_fields = (
+            'email', 'id', 'username', 'first_name', 'last_name',
+            'is_subscribed', 'recipes', 'recipes_count'
+        )
 
     def get_recipes(self, obj):
         recipes = Recipe.objects.filter(author=obj)
