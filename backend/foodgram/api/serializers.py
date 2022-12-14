@@ -24,7 +24,7 @@ class UserSerializer(serializers.ModelSerializer):
             'email', 'id', 'username', 'first_name', 'last_name',
             'is_subscribed', 'password'
         )
-        read_only = ('id', 'is_subscribed')
+        read_only_fields = ('id', 'is_subscribed')
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -128,7 +128,7 @@ class RecipeSerializer(serializers.ModelSerializer):
             'id', 'tags', 'author', 'ingredients', 'name', 'is_favorited',
             'is_in_shopping_cart', 'image', 'text', 'cooking_time'
         )
-        read_only_fields = '__all__'
+        read_only_fields = ('__all__',)
 
     def get_author(self, obj):
         qs = User.objects.add_anotations_user(
@@ -214,7 +214,7 @@ class RecipeFORSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'image', 'cooking_time'
         )
-        read_only_fields = '__all__'
+        read_only_fields = ('__all__',)
 
     @transaction.atomic
     def create(self, validated_data):
@@ -243,7 +243,7 @@ class UserFollowSerializer(serializers.ModelSerializer):
             'email', 'id', 'username', 'first_name', 'last_name',
             'is_subscribed', 'recipes', 'recipes_count'
         )
-        read_only_fields = '__all__'
+        read_only_fields = ('__all__',)
 
     def get_recipes(self, obj):
         recipes = Recipe.objects.filter(author=obj)
