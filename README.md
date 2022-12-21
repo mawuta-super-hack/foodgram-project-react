@@ -1,21 +1,29 @@
 ### Проект FoodGram - api для сайта для публикации рецептов.
 
-***Здесь вы можете создавать рецепты, подписываться на любимых авторов, создавать и выгружать списки покупок.***
+***Здесь вы можете создавать рецепты, подписываться на любимых авторов, добавлять рецепты в избранное или список покупок Список покупок также доступен для скачивания.***
 
-
-<br>
-
-![workflow](https://github.com/mawuta-super-hack/foodgram-poject-react/actions/workflows/foodgram_workflow.yml/badge.svg?)
 
 ### Возможности API:
-- Регистрация и выыдача токена авторизации.
-- Получение, создание, удаление учетных записей.
+- Регистрация пользователя, получение или удаление токена авторизации.
+- Получение списка пользователей, получение списка подписчиков.
+- Получение или удаление подписки на любимых авторов.
 - Получение, создание, обновление, удаление рецептов.
-- Добавление рецептов в избранное, в список покупок.
-- Подписка на любимых авторов.
+- Добавление рецептов в избранное или в список покупок, удаление рецепта из избранного или из списка покупок.
+- Скачивание списка покупок в формате txt.
 
 
-### Описание команд для запуска приложения в контейнерах:
+### Технологии:
+
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Django](https://img.shields.io/badge/django-%23092E20.svg?style=for-the-badge&logo=django&logoColor=white)
+![DjangoREST](https://img.shields.io/badge/DJANGO-REST-ff1709?style=for-the-badge&logo=django&logoColor=white&color=ff1709&labelColor=gray)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
+![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+![Nginx](https://img.shields.io/badge/nginx-%23009639.svg?style=for-the-badge&logo=nginx&logoColor=white)
+
+
+### Описание команд для запуска приложения локально в контейнерах с помощью Docker:
 
 Клонировать репозиторий и перейти в него в командной строке:
 
@@ -32,7 +40,7 @@ cd ./foodgram-poject-react/infra
 docker-compose up -d --build
 ```
 
-Выполение миграций:
+Выполнение миграций:
 ```
 docker-compose exec backend python manage.py migrate
 ```
@@ -52,19 +60,23 @@ docker-compose exec backend python manage.py collectstatic --no-input
 docker-compose exec backend python manage.py dumpdata > fixtures.json
 ```
 
-### Пример наполения .env-файла:
+### Пример наполнения .env-файла:
 
+```
 DB_ENGINE=django.db.backends.postgresql <br>
-DB_NAME=(им базы данных)<br>
+DB_NAME=(имя базы данных)<br>
 POSTGRES_USER=(логин для подключения к БД)<br>
 POSTGRES_PASSWORD=(пароль для подключения к БД)<br>
 DB_HOST=(название сервиса/контейнера)<br>
 DB_PORT=(порт для подключения к БД)<br>
 SECRET_KEY=(автоматически сгенерированное значение переменной при создании проекта django)<br>
+```
 
 ### Импорт данных из csv для наполнения базы:
 
-Реализуется за счет применения миграции: 0009_add_ingredients.py
+Импорт данных реализуется за счет применения миграций: 0009_add_ingredients.py и 0011_add_tags.py<br>
+Путь до файлов миграций:
+foodgram-project-react/backend/foodgram/foods/migrations/
 
 ### Примеры запросов к API:
 
@@ -112,20 +124,6 @@ DELETE http://127.0.0.1:8000/api/recipes/128
 
 
 
-<br>
-Проект доступен по [адресу](http://51.250.26.79/recipes).
-<br>
-
 Автор проекта:
 <br>
 Клименкова Мария [Github](https://github.com/mawuta-super-hack)<br>
-
-<br>
-Данные администратора:
-
-<br>
-email: maria@mail.ru
-
-<br>
-password: maria
-
